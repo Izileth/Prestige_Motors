@@ -9,5 +9,4 @@ export default [
     route("reset-password", "routes/auth/reset.tsx"),
 
     route("dashboard", "routes/profile/dashboard.tsx"),
-   
 ] satisfies RouteConfig;

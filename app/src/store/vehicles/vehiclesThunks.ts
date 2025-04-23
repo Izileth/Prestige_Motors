@@ -5,14 +5,7 @@ import type {
 } from './types';
 import type { StatusVeiculo } from '../../types/types';
 import type {
-  Combustivel,
-  Cambio,
-  Carroceria,
-  Categoria,
-  Classe,
   Vehicle,
-  Avaliacao,
-  PaginatedResponse
 } from "../../types/types";
 
 // Busca veículos com filtros
@@ -105,7 +98,7 @@ export const uploadVehicleVideo = createAsyncThunk(
   'vehicles/uploadVideo',
   async ({ vehicleId, video }: { vehicleId: string; video: File }, { rejectWithValue }) => {
     try {
-      return await vehicleService.uploadVideo(vehicleId, video);
+      return await vehicleService.uploadVideos(vehicleId, video);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Erro no upload de vídeo');
     }

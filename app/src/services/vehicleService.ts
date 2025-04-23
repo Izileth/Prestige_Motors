@@ -7,15 +7,14 @@ import type {
     Combustivel,
     Cambio,
     Carroceria,
-    Categoria,
-    Classe,
+
     StatusVeiculo
 } from "../types/types";
 
 export const vehicleService = {
     // Criação e Listagem
     createVehicle: async (data: Omit<Vehicle, 'id' | 'imagens' | 'videos' | 'status'>): Promise<Vehicle> => {
-        const response = await api.post("/veiculos", data);
+        const response = await api.post("/vehicles", data);
         return response.data;
     },
 
@@ -32,7 +31,7 @@ export const vehicleService = {
         page?: number;
         limit?: number;
     }): Promise<PaginatedResponse<Vehicle>> => {
-        const response = await api.get("/veiculos", { params: filters });
+        const response = await api.get("/vehicles", { params: filters });
         return response.data;
     },
 
@@ -41,51 +40,51 @@ export const vehicleService = {
         vendedor: Pick<User, "id" | "nome" | "telefone" | "avatar">;
         avaliacoes: Avaliacao[];
     }> => {
-        const response = await api.get(`/veiculos/${id}`);
+        const response = await api.get(`/vehicles/${id}`);
         return response.data;
     },
 
     updateVehicle: async (id: string, data: Partial<Vehicle>): Promise<Vehicle> => {
-        const response = await api.put(`/veiculos/${id}`, data);
+        const response = await api.put(`/vehicles/${id}`, data);
         return response.data;
     },
 
     updateVehicleStatus: async (id: string, status: StatusVeiculo): Promise<Vehicle> => {
-        const response = await api.put(`/veiculos/${id}/status`, { status });
+        const response = await api.put(`/vehicles/${id}/status`, { status });
         return response.data;
     },
 
     deleteVehicle: async (id: string): Promise<void> => {
-        await api.delete(`/veiculos/${id}`);
+        await api.delete(`/vehicles/${id}`);
     },
 
     // Mídia
     uploadImages: async (vehicleId: string, images: File[]): Promise<{ urls: string[] }> => {
         const formData = new FormData();
         images.forEach((image) => formData.append("images", image));
-        const response = await api.post(`/veiculos/${vehicleId}/images`, formData);
+        const response = await api.post(`/vehicles/${vehicleId}/images`, formData);
         return response.data;
     },
 
-    uploadVideo: async (vehicleId: string, video: File): Promise<{ url: string }> => {
+    uploadVideos: async (vehicleId: string, video: File): Promise<{ urls: string[] }> => {
         const formData = new FormData();
         formData.append("video", video);
-        const response = await api.post(`/veiculos/${vehicleId}/video`, formData);
+        const response = await api.post(`/vehicles/${vehicleId}/videos`, formData);
         return response.data;
     },
 
     // Interações
     registerView: async (vehicleId: string): Promise<void> => {
-        await api.post(`/veiculos/${vehicleId}/visualizacao`);
+        await api.post(`/vehicles/${vehicleId}/views`);
     },
-
+  
     toggleFavorite: async (vehicleId: string): Promise<{ favorited: boolean }> => {
-        const response = await api.post(`/veiculos/${vehicleId}/favorito`);
+        const response = await api.post(`/vehicles/${vehicleId}/favorites`);
         return response.data;
     },
 
     getFavorites: async (): Promise<PaginatedResponse<Vehicle>> => {
-        const response = await api.get("/veiculos/meus/favoritos");
+        const response = await api.get("/vehicles/me/favorites");
         return response.data;
     },
 
@@ -94,23 +93,23 @@ export const vehicleService = {
         rating: number; 
         comentario?: string 
     }): Promise<Avaliacao> => {
-        const response = await api.post(`/veiculos/${vehicleId}/avaliar`, data);
+        const response = await api.post(`/vehicles/${vehicleId}/reviews`, data);
         return response.data;
     },
 
     getReviews: async (vehicleId: string): Promise<PaginatedResponse<Avaliacao>> => {
-        const response = await api.get(`/veiculos/${vehicleId}/avaliacoes`);
+        const response = await api.get(`/vehicles/${vehicleId}/reviews`);
         return response.data;
     },
 
-    // Vendedor
-    getVendorVehicles: async (vendorId: string): Promise<PaginatedResponse<Vehicle>> => {
-        const response = await api.get(`/veiculos/vendedor/${vendorId}`);
+
+    getVendorVehicles: async (vendorId: string) => {
+        const response = await api.get(`/vehicles/vendors/${vendorId}`);
         return response.data;
     },
 
     getUserVehicles: async (): Promise<PaginatedResponse<Vehicle>> => {
-        const response = await api.get("/veiculos/meus/veiculos");
+        const response = await api.get("/vehicles/me/vehicles");
         return response.data;
     },
 
@@ -120,7 +119,7 @@ export const vehicleService = {
         averagePrice: number;
         byFuelType: Record<Combustivel, number>;
     }> => {
-        const response = await api.get("/veiculos/stats");
+        const response = await api.get("/vehicles/stats");
         return response.data;
     },
 
@@ -129,7 +128,7 @@ export const vehicleService = {
         favoritesCount: number;
         averageRating: number;
     }> => {
-        const response = await api.get("/veiculos/meus/stats");
+        const response = await api.get("/vehicles/me/vehicle-stats");
         return response.data;
     }
 };

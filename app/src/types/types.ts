@@ -1,15 +1,19 @@
 import type { AsyncThunkAction } from '@reduxjs/toolkit';
 import type { AnyAction } from 'redux';
 
-type UnwrapThunkReturn<T> = T extends AsyncThunkAction<infer U, any, any> 
-  ? U 
-  : never;
+export type UserPreview = Pick<User, 'id' | 'nome' | 'avatar'> & WithId;
+export type VehiclePreview = Pick<Vehicle, 'id' | 'marca' | 'modelo'> & {
+  imagemPrincipal?: string;
+};
 
-type ThunkDispatch<A extends AnyAction> = (
-  action: A | AsyncThunkAction<any, any, any>
-) => Promise<UnwrapThunkReturn<A>>;
-
-
+type WithId<T = string> = { id: T };
+type WithTimestamps = {
+  createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string;
+};
+export type Kilometers = number & { readonly __brand: 'Kilometers' };
+export type Price = number & { readonly __brand: 'Price' };
 
 // Enums para corresponder ao Prisma
 export enum Combustivel {
@@ -88,7 +92,7 @@ export type Endereco = {
   longitude?: number;
 };
 
-export type Vehicle = {
+export type Vehicle = WithTimestamps & WithId &  {
   id: string;
   marca: string;
   modelo: string;
@@ -112,22 +116,34 @@ export type Vehicle = {
   seloOriginal: boolean;
   aceitaTroca: boolean;
   parcelamento?: number;
-  imagens: { id: string; url: string; isMain: boolean }[];
-  videos?: { id: string; url: string }[];
-  avaliacoes?: Avaliacao[]; // Adicione esta linha
+  imagens: VehicleImage[];
+  videos?: MediaAsset[];
+  avaliacoes?: Avaliacao[];
 
 };
 
-export type Venda = {
-  id: string;
-  precoVenda: number;
+
+export interface Venda extends WithTimestamps, WithId {
+  precoVenda: Price;
   formaPagamento: string;
   parcelas?: number;
   dataVenda: string;
-  vehicle: Pick<Vehicle, 'id' | 'marca' | 'modelo'> & { imagens: { url: string }[] };
-  vendedor: Pick<User, 'id' | 'nome'>;
-  comprador: Pick<User, 'id' | 'nome'>;
-};
+  vehicle: VehiclePreview;
+  vendedor: UserPreview;
+  comprador: UserPreview;
+  status: 'COMPLETE' | 'PENDING' | 'CANCELED';
+}
+
+export interface MediaAsset extends WithId {
+  url: string;
+  altText?: string;
+  ordem?: number;
+}
+
+export interface VehicleImage extends MediaAsset {
+  isMain: boolean;
+  colorHex?: string;
+}
 
 export type Avaliacao = {
   id: string;
@@ -136,6 +152,7 @@ export type Avaliacao = {
   createdAt: string;
   user: Pick<User, 'id' | 'nome' | 'avatar'>;
 };
+
 
 export type PaginatedResponse<T> = {
   data: T[];
@@ -148,3 +165,13 @@ export type PaginatedResponse<T> = {
     hasPrevPage: boolean;
   };
 };
+
+export type VehicleFilters = {
+  marca?: string[];
+  precoMin?: number;
+  precoMax?: number;
+  anoMin?: number;
+  anoMax?: number;
+  combustivel?: Combustivel[];
+};
+

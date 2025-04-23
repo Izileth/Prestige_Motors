@@ -1,27 +1,98 @@
-import type { User, Endereco, Venda, PaginatedResponse } from '../../types/types';
+import type { Endereco} from '../../types/types';
 
-// Estado de autenticação simplificado (sem token)
+// Payloads para ações
+export interface RegisterPayload {
+  nome: string;
+  email: string;
+  senha: string;
+  telefone: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  senha: string;
+}
+
+export interface UpdateProfilePayload {
+  nome?: string;
+  email?: string;
+  senha?: string;
+  telefone?: string;
+  avatar?: string;
+  [key: string]: any;
+}
+
+export interface CreateAddressPayload {
+  cep: string;
+  logradouro: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+
+}
+
+export interface UpdateAddressPayload {
+  cep: string;
+  logradouro: string;
+  numero: string;
+  complemento?: string;
+  bairro: string;
+  cidade: string;
+  estado: string;
+  [key: string]: any;
+}
+
+// Tipos para os modelos de dados
+export interface User {
+  id: string;
+  name?: string;
+  email?: string;
+  // outros campos do usuário
+  [key: string]: any;
+}
+
+export interface Profile {
+  // campos do perfil
+  [key: string]: any;
+}
+
+export interface Venda {
+  id: string;
+  [key: string]: any;
+}
+
+export interface UserStats {
+  // campos das estatísticas
+  [key: string]: any;
+}
+
+// Tipos para o estado
+export interface PaginationMeta {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+}
+
+export interface PaginatedData<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
+// Estados para as diferentes seções
 export interface AuthState {
   user: User | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
 
-// Estado do perfil do usuário
-export interface UserProfileState {
-  profile: (User & {
-    enderecos: Endereco[];
-    vendasComoVendedor: Venda[];
-    vendasComoComprador: Venda[];
-    status: 'idle' | 'loading' | 'succeeded' | 'failed';
-    error: string | null;
-    
-  }) | null;
+export interface ProfileState {
+  profile: Profile | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
 
-// Estado dos endereços
 export interface AddressesState {
   addresses: Endereco[];
   currentAddress: Endereco | null;
@@ -29,152 +100,24 @@ export interface AddressesState {
   error: string | null;
 }
 
-// Estado de vendas e compras
 export interface SalesState {
-  sales: PaginatedResponse<Venda>;
-  purchases: PaginatedResponse<Venda>;
+  sales: PaginatedData<Venda>;
+  purchases: PaginatedData<Venda>;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
 
-// Estado de estatísticas
 export interface StatsState {
   stats: UserStats | null;
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
 
-// Tipos de payload para operações
-export type RegisterPayload = {
-  nome: string;
-  email: string;
-  senha: string;
-  telefone: string;
-  cpf?: string;
-  dataNascimento?: string;
-};
-
-export type LoginPayload = {
-  email: string;
-  password?: string;
-};
-
-export type LoginResponse = User;
-
-export type CreateAddressPayload = Omit<Endereco, "id" | "userId">;
-
-export type UpdateAddressPayload = Partial<CreateAddressPayload>;
-
-export type UpdateProfilePayload = Partial<{
-  nome: string;
-  telefone: string;
-  avatar: string;
-}>;
-
-export type UserStats = {
-  totalSales: number;
-  totalPurchases: number;
-  favoriteVehicleType: string | null;
-  totalVehicles?: number;
-  averageRating?: number;
-};
-
-export type SalesFilterParams = {
-  page?: number;
-  limit?: number;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-};
-
-// Estados iniciais
-export const initialAuthState: AuthState = {
-  user: null,
-  status: 'idle',
-  error: null,
-};
-
-export const initialProfileState: UserProfileState = {
-  profile: null,
-  status: 'idle',
-  error: null,
-};
-
-export const initialAddressesState: AddressesState = {
-  addresses: [],
-  currentAddress: null,
-  status: 'idle',
-  error: null,
-};
-
-export const initialSalesState: SalesState = {
-  sales: {
-    data: [],
-    meta: {
-      currentPage: 1,
-      itemsPerPage: 10,
-      totalItems: 0,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: false,
-    },
-  },
-  purchases: {
-    data: [],
-    meta: {
-      currentPage: 1,
-      itemsPerPage: 10,
-      totalItems: 0,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: false,
-    },
-  },
-  status: 'idle',
-  error: null,
-};
-
-export const initialStatsState: StatsState = {
-  stats: null,
-  status: 'idle',
-  error: null,
-};
-
-// Tipos para operações do usuário
-export interface UserOperations {
-  // Autenticação
-  signIn: (credentials: LoginPayload) => Promise<User>;
-  signUp: (userData: RegisterPayload) => Promise<User>;
-  signOut: () => Promise<void>;
-  checkSession: () => Promise<void>;
-  
-  // Perfil
-  getProfile: () => Promise<UserProfileState['profile']>;
-  updateProfile: (data: UpdateProfilePayload) => Promise<User>;
-  deleteAccount: () => Promise<void>;
-  
-  // Endereços
-  getAddresses: () => Promise<Endereco[]>;
-  addAddress: (addressData: CreateAddressPayload) => Promise<Endereco>;
-  updateAddress: (addressId: string, addressData: UpdateAddressPayload) => Promise<Endereco>;
-  removeAddress: (addressId: string) => Promise<void>;
-  
-  // Vendas/Compras
-  getSales: () => Promise<PaginatedResponse<Venda>>;
-  getPurchases: () => Promise<PaginatedResponse<Venda>>;
-  
-  // Estatísticas
-  getStats: () => Promise<UserStats>;
-}
-
-// Tipo para o hook useUser
-export type UseUserHook = UserOperations & {
-  // Estado
+// Estado unificado para o slice
+export interface UserState {
   auth: AuthState;
-  profile: UserProfileState['profile'];
-  addresses: Endereco[];
-  sales: SalesState['sales'];
-  purchases: SalesState['purchases'];
-  stats: UserStats | null;
-  isAuthenticated: boolean;
-};
+  profile: ProfileState;
+  addresses: AddressesState;
+  sales: SalesState;
+  stats: StatsState;
+}

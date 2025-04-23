@@ -27,28 +27,6 @@ export function Hero() {
 
     return (
         <>
-         <Carousel
-        items={DataProducts}
-        variant="overlay"
-        contentPosition="right"
-        showDots={false}
-        showProgress={true}
-        height="h-[80vh]"
-      />
-      <CategorySelector categories={DataCategories} />
-      <TopSellers 
-        vehicles={DataVehicles}
-        error={error}
-      />
-      <SpecialOffers/>
-      <NewReleases 
-        vehicles={DataNewReleases}
-        error={newVehiclesError}
-      />
-      <SocialProof 
-        testimonials={DataTestmonial}
-        error={testimonialsError}
-      />
       <WordCarousel 
       words={['Descontos Exclusivos', 'Financiamento Facilitado', 'Garantia Estendida']} 
       speed={60}

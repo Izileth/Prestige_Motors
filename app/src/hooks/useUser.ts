@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { useAppSelector, useAppDispatch } from './hooks';
+import { useCallback } from "react";
+import { useAppSelector, useAppDispatch } from "./hooks";
 import {
   login,
   register,
@@ -14,71 +14,84 @@ import {
   deleteUserAddress,
   fetchUserSales,
   fetchUserPurchases,
-  fetchUserStats
-} from '../store/user/userThuncks';
+  fetchUserStats,
+  setCurrentAddress,
+  forceLogout,
+  clearAuthError,
+  clearProfile,
+  clearAddresses,
+  clearSales,
+  clearStats,
+  initialUserState
+} from "../store/user/userSlice";
+
 import type {
   RegisterPayload,
   LoginPayload,
   UpdateProfilePayload,
   CreateAddressPayload,
-  UpdateAddressPayload
-} from '../store/user/types';
-import { initialAddressesState, initialSalesState } from '../store/user/types';
+  UpdateAddressPayload,
+} from "../store/user/types";
 
-import type { Action, ThunkDispatch, AnyAction } from '@reduxjs/toolkit';
-import type { RootState } from '../store/globalStore';
+import type { Endereco, Venda } from "../types/types";
+
+import type { User, Profile } from "../store/user/types";
+import type { ThunkDispatch, AnyAction } from "@reduxjs/toolkit";
+import type { RootState } from "../store/globalStore";
 
 export const useUser = () => {
   const dispatch: ThunkDispatch<RootState, unknown, AnyAction> = useAppDispatch();
+  const isClient = typeof window !== "undefined";
 
-  const isClient = typeof window !== 'undefined';
-
-  // Seletores de estado atualizados
-  const auth = useAppSelector(state => state.auth);
-  const profile = useAppSelector(state => state.userProfile);
-  const addresses = useAppSelector(state => state.userAddresses);
-  const sales = useAppSelector(state => state.userSales); // Certifique-se que o nome do slice está co
-  const stats = useAppSelector(state => state.userStats);
+  // Seletores de estado usando a estrutura do slice unificado
+  const userState = useAppSelector((state) => state.user);
+  
+  // Extraindo subpartes do estado para uso mais fácil
+  const auth = userState.auth;
+  const profile = userState.profile;
+  const addresses = userState.addresses;
+  const sales = userState.sales;
+  const stats = userState.stats;
 
   const isAuthenticated = isClient && Boolean(auth.user);
 
   // Verificações comuns
   const ensureClient = useCallback(() => {
     if (!isClient) {
-      throw new Error('Operação disponível apenas no client-side');
+      throw new Error("Operação disponível apenas no client-side");
     }
   }, [isClient]);
 
   const ensureAuthenticated = useCallback(() => {
     ensureClient();
     if (!isAuthenticated) {
-      throw new Error('Usuário não autenticado');
+      throw new Error("Usuário não autenticado");
     }
   }, [ensureClient, isAuthenticated]);
 
-  // Métodos de autenticação
-  const signIn = useCallback(async (credentials: LoginPayload) => {
-    try {
-      ensureClient();
-      
-      const result = await dispatch(login(credentials)).unwrap();
-      const user = await dispatch(login(result));
-      return user;
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha no login');
-    }
-  }, [dispatch, ensureClient]);
+  const signIn = useCallback(
+    async (credentials: LoginPayload) => {
+      try {
+        ensureClient();
+        return await dispatch(login(credentials)).unwrap();
+      } catch (error) {
+        throw error instanceof Error ? error : new Error("Falha no login");
+      }
+    },
+    [dispatch, ensureClient]
+  );
 
-  
-
-  const signUp = useCallback(async (userData: RegisterPayload) => {
-    try {
-      ensureClient();
-      return await dispatch(register(userData)).unwrap();
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha no registro');
-    }
-  }, [dispatch, ensureClient]);
+  const signUp = useCallback(
+    async (userData: RegisterPayload) => {
+      try {
+        ensureClient();
+        return await dispatch(register(userData)).unwrap();
+      } catch (error) {
+        throw error instanceof Error ? error : new Error("Falha no registro");
+      }
+    },
+    [dispatch, ensureClient]
+  );
 
   const signOut = useCallback(async () => {
     try {
@@ -86,7 +99,7 @@ export const useUser = () => {
       await dispatch(logout()).unwrap();
     } catch (error) {
       // Força logout mesmo em caso de erro
-      dispatch({ type: 'auth/forceLogout' });
+      dispatch(forceLogout());
     }
   }, [dispatch, ensureClient]);
 
@@ -105,25 +118,34 @@ export const useUser = () => {
       ensureAuthenticated();
       return await dispatch(fetchCurrentUser()).unwrap();
     } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao buscar perfil');
+      throw error instanceof Error
+        ? error
+        : new Error("Falha ao buscar perfil");
     }
   }, [dispatch, ensureAuthenticated]);
 
-  const updateProfile = useCallback(async (data: UpdateProfilePayload) => {
-    try {
-      ensureAuthenticated();
-      return await dispatch(updateCurrentProfile(data)).unwrap();
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao atualizar perfil');
-    }
-  }, [dispatch, ensureAuthenticated]);
+  const updateProfile = useCallback(
+    async (data: UpdateProfilePayload) => {
+      try {
+        ensureAuthenticated();
+        return await dispatch(updateCurrentProfile(data)).unwrap();
+      } catch (error) {
+        throw error instanceof Error
+          ? error
+          : new Error("Falha ao atualizar perfil");
+      }
+    },
+    [dispatch, ensureAuthenticated]
+  );
 
   const deleteAccount = useCallback(async () => {
     try {
       ensureAuthenticated();
       await dispatch(deleteCurrentAccount()).unwrap();
     } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao deletar conta');
+      throw error instanceof Error
+        ? error
+        : new Error("Falha ao deletar conta");
     }
   }, [dispatch, ensureAuthenticated]);
 
@@ -133,36 +155,62 @@ export const useUser = () => {
       ensureAuthenticated();
       return await dispatch(fetchUserAddresses()).unwrap();
     } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao buscar endereços');
+      throw error instanceof Error
+        ? error
+        : new Error("Falha ao buscar endereços");
     }
   }, [dispatch, ensureAuthenticated]);
 
-  const addAddress = useCallback(async (addressData: CreateAddressPayload) => {
-    try {
-      ensureAuthenticated();
-      return await dispatch(createUserAddress(addressData)).unwrap();
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao criar endereço');
-    }
-  }, [dispatch, ensureAuthenticated]);
+  const addAddress = useCallback(
+    async (addressData: CreateAddressPayload) => {
+      try {
+        ensureAuthenticated();
+        return await dispatch(createUserAddress(addressData)).unwrap();
+      } catch (error) {
+        throw error instanceof Error
+          ? error
+          : new Error("Falha ao criar endereço");
+      }
+    },
+    [dispatch, ensureAuthenticated]
+  );
 
-  const updateAddress = useCallback(async (addressId: string, addressData: UpdateAddressPayload) => {
-    try {
-      ensureAuthenticated();
-      return await dispatch(updateUserAddress({ addressId, addressData })).unwrap();
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao atualizar endereço');
-    }
-  }, [dispatch, ensureAuthenticated]);
+  const updateAddress = useCallback(
+    async (addressId: string, addressData: UpdateAddressPayload) => {
+      try {
+        ensureAuthenticated();
+        return await dispatch(
+          updateUserAddress({ addressId, addressData })
+        ).unwrap();
+      } catch (error) {
+        throw error instanceof Error
+          ? error
+          : new Error("Falha ao atualizar endereço");
+      }
+    },
+    [dispatch, ensureAuthenticated]
+  );
 
-  const removeAddress = useCallback(async (addressId: string) => {
-    try {
-      ensureAuthenticated();
-      await dispatch(deleteUserAddress(addressId)).unwrap();
-    } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao remover endereço');
-    }
-  }, [dispatch, ensureAuthenticated]);
+  const removeAddress = useCallback(
+    async (addressId: string) => {
+      try {
+        ensureAuthenticated();
+        await dispatch(deleteUserAddress(addressId)).unwrap();
+      } catch (error) {
+        throw error instanceof Error
+          ? error
+          : new Error("Falha ao remover endereço");
+      }
+    },
+    [dispatch, ensureAuthenticated]
+  );
+
+  const setSelectedAddress = useCallback(
+    (address: Endereco | null) => {
+      dispatch(setCurrentAddress(address));
+    },
+    [dispatch]
+  );
 
   // Métodos de vendas/compras
   const getSales = useCallback(async () => {
@@ -170,36 +218,44 @@ export const useUser = () => {
       ensureAuthenticated();
       return await dispatch(fetchUserSales()).unwrap();
     } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao buscar vendas');
+      throw error instanceof Error
+        ? error
+        : new Error("Falha ao buscar vendas");
     }
   }, [dispatch, ensureAuthenticated]);
 
   const getPurchases = useCallback(async () => {
     try {
       ensureAuthenticated();
-      return await dispatch(fetchUserPurchases()).unwrap();
+      if (!auth.user?.id) throw new Error("User ID not available");
+      return await dispatch(fetchUserPurchases(auth.user.id)).unwrap();
     } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao buscar compras');
+      throw error instanceof Error
+        ? error
+        : new Error("Falha ao buscar compras");
     }
-  }, [dispatch, ensureAuthenticated]);
+  }, [dispatch, ensureAuthenticated, auth.user?.id]);
 
   // Estatísticas
   const getStats = useCallback(async () => {
     try {
       ensureAuthenticated();
-      return await dispatch(fetchUserStats()).unwrap();
+      if (!auth.user?.id) throw new Error("User ID not available");
+      return await dispatch(fetchUserStats(auth.user.id)).unwrap();
     } catch (error) {
-      throw error instanceof Error ? error : new Error('Falha ao buscar estatísticas');
+      throw error instanceof Error
+        ? error
+        : new Error("Falha ao buscar estatísticas");
     }
-  }, [dispatch, ensureAuthenticated]);
+  }, [dispatch, ensureAuthenticated, auth.user?.id]);
 
   return {
     // Estado
-    auth: isClient ? auth : { user: null, status: 'idle' },
-    profile: isClient ? profile?.profile ?? null : null, // Acesso correto ao profil
-    addresses: isClient ? addresses : initialAddressesState,
-    sales: isClient ? sales : initialSalesState,
-    stats: isClient ? stats?.stats ?? null : null, // Acesso correto aos stats
+    auth: isClient ? auth : initialUserState.auth,
+    profile: isClient ? profile : initialUserState.profile,
+    addresses: isClient ? addresses : initialUserState.addresses,
+    sales: isClient ? sales : initialUserState.sales,
+    stats: isClient ? stats : initialUserState.stats,
     isAuthenticated,
 
     // Autenticação
@@ -218,55 +274,53 @@ export const useUser = () => {
     addAddress,
     updateAddress,
     removeAddress,
+    setSelectedAddress,
 
     // Vendas/Compras
     getSales,
     getPurchases,
 
     // Estatísticas
-    getStats
+    getStats,
+
+    // Ações de limpeza
+    clearAuthError: () => dispatch(clearAuthError()),
+    clearProfile: () => dispatch(clearProfile()),
+    clearAddresses: () => dispatch(clearAddresses()),
+    clearSales: () => dispatch(clearSales()),
+    clearStats: () => dispatch(clearStats()),
   };
 };
 
 // Hook derivado para autenticação
 export const useAuth = () => {
-  const { 
-    signIn, 
-    signUp, 
-    signOut, 
-    checkSession,
-    isAuthenticated, 
-    auth 
-  } = useUser();
-  
+  const { auth, signIn, signUp, signOut, checkSession, isAuthenticated, clearAuthError } = useUser();
+
   return {
     signIn,
     signUp,
     signOut,
     checkSession,
+    clearAuthError,
     isAuthenticated,
     authStatus: auth.status,
-    authError: auth.user,
-    user: auth.user
+    authError: auth.error,
+    user: auth.user,
   };
 };
 
 // Hook derivado para perfil
 export const useUserProfile = () => {
-  const { 
-    profile, 
-    getProfile, 
-    updateProfile, 
-    deleteAccount 
-  } = useUser();
-  
+  const { profile, getProfile, updateProfile, deleteAccount, clearProfile } = useUser();
+
   return {
-    profile,
+    profile: profile.profile,
     getProfile,
     updateProfile,
     deleteAccount,
-    profileStatus: profile?.status,
-    profileError: profile?.error
+    clearProfile,
+    profileStatus: profile.status,
+    profileError: profile.error,
   };
 };
 
@@ -276,10 +330,12 @@ export const useUserAddresses = () => {
     addresses, 
     getAddresses, 
     addAddress, 
-    updateAddress,
-    removeAddress
+    updateAddress, 
+    removeAddress, 
+    setSelectedAddress,
+    clearAddresses
   } = useUser();
-  
+
   return {
     addresses: addresses.addresses,
     currentAddress: addresses.currentAddress,
@@ -287,25 +343,37 @@ export const useUserAddresses = () => {
     addAddress,
     updateAddress,
     removeAddress,
+    setSelectedAddress,
+    clearAddresses,
     addressesStatus: addresses.status,
-    addressesError: addresses.error
+    addressesError: addresses.error,
   };
 };
 
 // Hook derivado para vendas/compras
 export const useUserSales = () => {
-  const { 
-    sales, 
-    getSales, 
-    getPurchases 
-  } = useUser();
-  
+  const { sales, getSales, getPurchases, clearSales } = useUser();
+
   return {
-    sales: sales?.sales, // Acesso seguro às vendas
-    purchases: sales?.purchases, // Acesso seguro às compras
+    sales: sales.sales,
+    purchases: sales.purchases,
     getSales,
     getPurchases,
+    clearSales,
     salesStatus: sales.status,
-    salesError: sales.error
+    salesError: sales.error,
+  };
+};
+
+// Hook derivado para estatísticas
+export const useUserStats = () => {
+  const { stats, getStats, clearStats } = useUser();
+
+  return {
+    stats: stats.stats,
+    getStats,
+    clearStats,
+    statsStatus: stats.status,
+    statsError: stats.error,
   };
 };

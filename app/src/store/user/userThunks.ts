@@ -3,16 +3,18 @@ import {
   authService,
   profileService,
   addressService,
-  saleService,
   statsService
 } from '../../services/userService';
+
+import { saleService } from '~/src/services/salesService';
+import type { RootState } from '../globalStore';
 import type {
   RegisterPayload,
   LoginPayload,
   UpdateProfilePayload,
   CreateAddressPayload,
   UpdateAddressPayload
-} from './types';
+} from './index';
 
 // Authentication Thunks
 export const register = createAsyncThunk(
@@ -26,22 +28,30 @@ export const register = createAsyncThunk(
   }
 );
 
+
+
 export const login = createAsyncThunk(
   'auth/login',
   async (credentials: LoginPayload, { rejectWithValue }) => {
     try {
       return await authService.login(credentials);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro no login');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('Erro desconhecido no login');
     }
   }
 );
+
+
 
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
       await authService.logout();
+      return null; // ← Adicione um retorno explícito
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao fazer logout');
     }
@@ -146,22 +156,28 @@ export const deleteUserAddress = createAsyncThunk(
 );
 
 // Sales Thunks
+
+
 export const fetchUserSales = createAsyncThunk(
   'sales/fetchSales',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      return await saleService.getMySales();
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao buscar vendas');
+      const state = getState() as RootState;
+      const userId = state.user.auth.user?.id;
+      if (!userId) throw new Error('Usuário não autenticado');
+      
+      return await saleService.getSalesBySeller(userId);
+    } catch (error: unknown) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Erro ao buscar vendas');
     }
   }
 );
 
 export const fetchUserPurchases = createAsyncThunk(
   'sales/fetchPurchases',
-  async (_, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue }) => { // Recebe userId como parâmetro
     try {
-      return await saleService.getMyPurchases();
+      return await saleService.getPurchasesByBuyer(userId);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao buscar compras');
     }
@@ -169,11 +185,12 @@ export const fetchUserPurchases = createAsyncThunk(
 );
 
 // Stats Thunks
+
 export const fetchUserStats = createAsyncThunk(
   'stats/fetchStats',
-  async (_, { rejectWithValue }) => {
+  async (userId: string, { rejectWithValue }) => {
     try {
-      return await statsService.getMyStats();
+      return await statsService.getUserStats(userId);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao buscar estatísticas');
     }

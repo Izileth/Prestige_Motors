@@ -26,12 +26,12 @@ type AddressData = Omit<Endereco, "id" | "userId">;
 
 export const authService = {
   register: async (data: RegisterData): Promise<User> => {
-    const response = await api.post("/usuarios/register", data);
+    const response = await api.post("/users/register", data);
     return response.data.user; // Assume que o cookie é setado automaticamente
   },
 
   login: async (credentials: LoginPayload): Promise<User> => {
-    const response = await api.post("/usuarios/login", credentials);
+    const response = await api.post("/users/login", credentials);
     return response.data;
   },
 
@@ -40,8 +40,8 @@ export const authService = {
   },
 
   checkSession: async (): Promise<User> => {
-    const response = await api.get("/usuarios/me");
-    return response.data;
+    const response = await api.get("/users/check-session");
+    return response.data.user; // Seu backend retorna { user } no objeto de resposta
   }
 };
 
@@ -55,38 +55,25 @@ export const profileService = {
     vendasComoVendedor: Venda[];
     vendasComoComprador: Venda[];
   }> => {
-    const response = await api.get("/usuarios/me");
+    const response = await api.get("/users/me");
     return response.data;
   },
 
   updateProfile: async (data: UpdateProfileData): Promise<User> => {
-    const response = await api.put("/usuarios/me", data);
+    const response = await api.put("/users/me", data);
     return response.data;
   },
 
   deleteAccount: async (): Promise<void> => {
-    await api.delete("/usuarios/me");
+    await api.delete("/users/me");
   },
 };
 
 
-// Serviços de Vendas/Compras
-
-export const saleService = {
-  getMySales: async (): Promise<PaginatedResponse<Venda>> => {
-    const response = await api.get('/sales/me');
-    return response.data;
-  },
-
-  getMyPurchases: async (): Promise<PaginatedResponse<Venda>> => {
-    const response = await api.get('/purchases/me');
-    return response.data;
-  }
-};
 
 export const statsService = {
-  getMyStats: async (): Promise<UserStats> => {
-    const response = await api.get('/stats/me');
+  getUserStats: async (userId: string): Promise<UserStats> => {
+    const response = await api.get(`/users/${userId}/stats`);
     return response.data;
   }
 };
@@ -94,22 +81,23 @@ export const statsService = {
 // Serviços de Endereço
 
 export const addressService = {
+
   getMyAddresses: async (): Promise<Endereco[]> => {
-    const response = await api.get("/usuarios/me/enderecos");
+    const response = await api.get("/users/me/addresses");
     return response.data;
   },
 
   createAddress: async (addressData: AddressData): Promise<Endereco> => {
-    const response = await api.post("/usuarios/me/enderecos", addressData);
+    const response = await api.post("/users/me/addresses", addressData);
     return response.data;
   },
 
   updateAddress: async (addressId: string, addressData: Partial<AddressData>): Promise<Endereco> => {
-    const response = await api.put(`/usuarios/me/enderecos/${addressId}`, addressData);
+    const response = await api.put(`/users/me/addresses/${addressId}`, addressData);
     return response.data;
   },
 
   deleteAddress: async (addressId: string): Promise<void> => {
-    await api.delete(`/usuarios/me/enderecos/${addressId}`);
+    await api.delete(`/users/me/addresses/${addressId}`);
   }
 };

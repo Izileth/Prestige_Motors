@@ -15,6 +15,10 @@ import { Button } from "./src/components/imported/button";
 import { ArrowLeft } from "lucide-react";
 import NavBar from "./src/components/layout/Navbar/navBar";
 import Footer from "./src/components/layout/Footer/footer";
+import { useEffect } from 'react';
+import { useAuth } from "./src/hooks/useUser";
+
+
 import "./app.css";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -64,6 +68,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   // Detecta ambiente
   const isServer = typeof window === 'undefined';
+
+  const { checkSession } = useAuth();
+  
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
   
   // No servidor, renderiza sem Redux
   if (isServer) {

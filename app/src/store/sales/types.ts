@@ -1,41 +1,61 @@
 import type { Venda, PaginatedResponse } from '../../types/types';
+import type { SaleStatus, PaymentMethod } from '~/src/services/salesService';
 
-export enum StatusVenda {
-  PENDENTE = 'PENDENTE',
-  CONCLUIDA = 'CONCLUIDA',
-  CANCELADA = 'CANCELADA',
-  REEMBOLSADA = 'REEMBOLSADA'
-}
+// Atualize o enum para usar os mesmos valores do serviço
+export type StatusVenda = SaleStatus; // Ou mantenha seu enum se precisar de valores diferentes
 
 export interface SalesState {
-  // Vendas gerais (paginadas)
   sales: PaginatedResponse<Venda>;
-  
-  // Vendas específicas de um veículo (paginadas)
-  vehicleSales: PaginatedResponse<Venda>;
-  
-  // Venda atualmente selecionada
+  sellerSales: {
+    [userId: string]: PaginatedResponse<Venda>;
+  };
+  buyerPurchases: {
+    [userId: string]: PaginatedResponse<Venda>;
+  };
+  vehicleSales: {
+    [vehicleId: string]: PaginatedResponse<Venda>;
+  };
   currentSale: Venda | null;
-  
-  // Status das operações
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
-  
-  // Mensagens de erro
   error: string | null;
 }
 
 export type CreateSalePayload = {
-  vehicleId: string;
-  compradorId: string;
-  precoVenda: number;
-  formaPagamento: string;
-  parcelas?: number;
+  vehicle_id: string;
+  buyer_id: string;
+  sale_price: number;
+  payment_method: PaymentMethod;
+  installments?: number;
 };
 
-export interface UpdateSaleStatusPayload {
-  saleId: string;
-  status: StatusVenda;
-}
+export type UpdateSaleStatusPayload = {
+  status: SaleStatus; // Usando o tipo do serviço
+};
+
+export type SalesQueryParams = {
+  page?: number;
+  limit?: number;
+  sellerId: string;
+  buyerId: string;
+  vehicleId: string;
+};
+
+// Novos Adicionais
+
+export type FetchSellerSalesPayload = {
+  userId: string;
+  params?: SalesQueryParams;
+};
+
+export type FetchBuyerPurchasesPayload = {
+  userId: string;
+  params?: SalesQueryParams;
+};
+
+export type SalesByVehiclePayload = {
+  vehicleId: string;
+  params?: SalesQueryParams;
+};
 
 export const initialState: SalesState = {
   sales: {
@@ -49,17 +69,9 @@ export const initialState: SalesState = {
       hasPrevPage: false
     }
   },
-  vehicleSales: {
-    data: [],
-    meta: {
-      currentPage: 1,
-      itemsPerPage: 10,
-      totalItems: 0,
-      totalPages: 1,
-      hasNextPage: false,
-      hasPrevPage: false
-    }
-  },
+  sellerSales: {},
+  buyerPurchases: {},
+  vehicleSales: {},
   currentSale: null,
   status: 'idle',
   error: null

@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useUser';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [senha, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const { signIn} = useAuth(); // Adicionei auth para debug
@@ -15,7 +15,7 @@ const LoginPage = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         
-        if (!email || !password) {
+        if (!email || !senha) {
             setError('Todos os campos são obrigatórios');
             return;
         }
@@ -24,7 +24,7 @@ const LoginPage = () => {
             setIsLoading(true);
             setError(null);
             
-            await signIn({ email, password });
+            await signIn({ email, senha});
             
             // Redirecionamento condicional baseado no papel do usuário
             navigate('/dashboard'); 
@@ -96,7 +96,7 @@ const LoginPage = () => {
                     type="password"
                     autoComplete="current-password"
                     required
-                    value={password}
+                    value={senha}
                     onChange={(e) => setPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="••••••••"

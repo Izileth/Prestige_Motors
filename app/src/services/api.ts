@@ -1,6 +1,6 @@
-import axios from 'axios';
-import { store } from '../store/globalStore';
-import { logout } from '../store/user/userThuncks';
+import axios from "axios";
+import { store } from "../store/globalStore";
+import { logout } from "../store/user/userThunks";
 
 interface ApiError {
   message: string;
@@ -11,7 +11,7 @@ interface ApiError {
 }
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:4242/api',
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4242/api",
   timeout: 10000,
   withCredentials: true, // Essencial para cookies HTTP-only
 });
@@ -19,13 +19,13 @@ const api = axios.create({
 // Interceptor de requisição simplificado
 api.interceptors.request.use((config) => {
   // Mantenha headers existentes para FormData
-  if (!(config.data instanceof FormData) && !config.headers['Content-Type']) {
-    config.headers['Content-Type'] = 'application/json';
+  if (!(config.data instanceof FormData) && !config.headers["Content-Type"]) {
+    config.headers["Content-Type"] = "application/json";
   }
-  
+
   // Remove qualquer header de Authorization pré-existente
-  delete config.headers['Authorization'];
-  
+  delete config.headers["Authorization"];
+
   return config;
 });
 
@@ -44,7 +44,7 @@ api.interceptors.response.use(
     // Tratamento específico para erros de autenticação
     if (error.response?.status === 401) {
       handleUnauthorizedError();
-      apiError.message = 'Sessão expirada - Por favor, faça login novamente';
+      apiError.message = "Sessão expirada - Por favor, faça login novamente";
     }
 
     return Promise.reject(apiError);
@@ -55,11 +55,12 @@ api.interceptors.response.use(
 function handleUnauthorizedError() {
   // Limpa o estado de autenticação
   store.dispatch(logout());
-  
+
   // Redireciona para login se não estiver já na página
-  if (typeof window !== 'undefined' && 
-      window.location.pathname !== '/login') {
-    window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+  if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+    window.location.href = `/login?redirect=${encodeURIComponent(
+      window.location.pathname
+    )}`;
   }
 }
 
