@@ -1,24 +1,35 @@
+import { createSlice } from '@reduxjs/toolkit';
+import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+
+import type { 
+    User, 
+    Profile, 
+    RegisterPayload, 
+    LoginPayload, 
+    UpdateProfilePayload, 
+    CreateAddressPayload, 
+    UpdateAddressPayload,
+    Venda,
+    UserStats
+} from './types';
+
+import type { Endereco, PaginatedResponse } from '../../types/types';
+
 import {
-  authService,
-  profileService,
-  addressService,
-  statsService
+    authService,
+    profileService,
+    addressService,
+    statsService
 } from '../../services/userService';
 
-import { saleService } from '~/src/services/salesService';
-import type { RootState } from '../globalStore';
-import type {
-  RegisterPayload,
-  LoginPayload,
-  UpdateProfilePayload,
-  CreateAddressPayload,
-  UpdateAddressPayload
-} from './index';
+import { saleService } from '../../services/salesService';
+
+
 
 // Authentication Thunks
-export const register = createAsyncThunk(
-  'auth/register',
+export const register = createAsyncThunk<User, RegisterPayload>(
+  'user/register',
   async (payload: RegisterPayload, { rejectWithValue }) => {
     try {
       return await authService.register(payload);
@@ -28,10 +39,8 @@ export const register = createAsyncThunk(
   }
 );
 
-
-
-export const login = createAsyncThunk(
-  'auth/login',
+export const login = createAsyncThunk<User, LoginPayload>(
+  'user/login',
   async (credentials: LoginPayload, { rejectWithValue }) => {
     try {
       return await authService.login(credentials);
@@ -44,22 +53,20 @@ export const login = createAsyncThunk(
   }
 );
 
-
-
 export const logout = createAsyncThunk(
-  'auth/logout',
+  'user/logout',
   async (_, { rejectWithValue }) => {
     try {
       await authService.logout();
-      return null; // ← Adicione um retorno explícito
+      return null;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao fazer logout');
     }
   }
 );
 
-export const checkAuth = createAsyncThunk(
-  'auth/checkSession',
+export const checkAuth = createAsyncThunk<User>(
+  'user/checkSession',
   async (_, { rejectWithValue }) => {
     try {
       return await authService.checkSession();
@@ -70,21 +77,19 @@ export const checkAuth = createAsyncThunk(
 );
 
 // Profile Thunks
-
-export const fetchCurrentUser = createAsyncThunk(
+export const fetchCurrentUser = createAsyncThunk<Profile>(
   'user/fetchCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
-      // Garanta que o serviço retorna apenas os dados do usuário
       const userData = await profileService.getCurrentUser();
-      return userData; // Retorna apenas os dados do usuário
+      return userData;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao buscar usuário');
     }
   }
 );
 
-export const updateCurrentProfile = createAsyncThunk(
+export const updateCurrentProfile = createAsyncThunk<Profile, UpdateProfilePayload>(
   'user/updateProfile',
   async (data: UpdateProfilePayload, { rejectWithValue }) => {
     try {
@@ -100,6 +105,7 @@ export const deleteCurrentAccount = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await profileService.deleteAccount();
+      return null;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao deletar conta');
     }
@@ -107,8 +113,8 @@ export const deleteCurrentAccount = createAsyncThunk(
 );
 
 // Address Thunks
-export const fetchUserAddresses = createAsyncThunk(
-  'address/fetchAddresses',
+export const fetchUserAddresses = createAsyncThunk<Endereco[]>(
+  'user/fetchAddresses',
   async (_, { rejectWithValue }) => {
     try {
       return await addressService.getMyAddresses();
@@ -118,8 +124,8 @@ export const fetchUserAddresses = createAsyncThunk(
   }
 );
 
-export const createUserAddress = createAsyncThunk(
-  'address/createAddress',
+export const createUserAddress = createAsyncThunk<Endereco, CreateAddressPayload>(
+  'user/createAddress',
   async (addressData: CreateAddressPayload, { rejectWithValue }) => {
     try {
       return await addressService.createAddress(addressData);
@@ -129,12 +135,12 @@ export const createUserAddress = createAsyncThunk(
   }
 );
 
-export const updateUserAddress = createAsyncThunk(
-  'address/updateAddress',
-  async ({ addressId, addressData }: { 
-    addressId: string; 
-    addressData: UpdateAddressPayload 
-  }, { rejectWithValue }) => {
+export const updateUserAddress = createAsyncThunk<
+  Endereco, 
+  { addressId: string; addressData: UpdateAddressPayload }
+>(
+  'user/updateAddress',
+  async ({ addressId, addressData }, { rejectWithValue }) => {
     try {
       return await addressService.updateAddress(addressId, addressData);
     } catch (error: any) {
@@ -143,12 +149,12 @@ export const updateUserAddress = createAsyncThunk(
   }
 );
 
-export const deleteUserAddress = createAsyncThunk(
-  'address/deleteAddress',
-  async (addressId: string, { rejectWithValue }) => {
+export const deleteUserAddress = createAsyncThunk<string, string>(
+  'user/deleteAddress',
+  async (addressId: string, { rejectWithValue, fulfillWithValue }) => {
     try {
       await addressService.deleteAddress(addressId);
-      return addressId;
+      return fulfillWithValue(addressId);
     } catch (error: any) {
       return rejectWithValue(error.message || 'Erro ao deletar endereço');
     }
@@ -156,16 +162,12 @@ export const deleteUserAddress = createAsyncThunk(
 );
 
 // Sales Thunks
+// Se PaginatedResponse<Venda> é o que os serviços realmente retornam:
 
-
-export const fetchUserSales = createAsyncThunk(
-  'sales/fetchSales',
-  async (_, { getState, rejectWithValue }) => {
+export const fetchUserSales = createAsyncThunk<PaginatedResponse<Venda>, string>(
+  'user/fetchSales',
+  async (userId: string, { rejectWithValue }) => {
     try {
-      const state = getState() as RootState;
-      const userId = state.user.auth.user?.id;
-      if (!userId) throw new Error('Usuário não autenticado');
-      
       return await saleService.getSalesBySeller(userId);
     } catch (error: unknown) {
       return rejectWithValue(error instanceof Error ? error.message : 'Erro ao buscar vendas');
@@ -173,9 +175,11 @@ export const fetchUserSales = createAsyncThunk(
   }
 );
 
-export const fetchUserPurchases = createAsyncThunk(
-  'sales/fetchPurchases',
-  async (userId: string, { rejectWithValue }) => { // Recebe userId como parâmetro
+
+
+export const fetchUserPurchases = createAsyncThunk<PaginatedResponse<Venda>, string>(
+  'user/fetchPurchases',
+  async (userId: string, { rejectWithValue }) => {
     try {
       return await saleService.getPurchasesByBuyer(userId);
     } catch (error: any) {
@@ -185,9 +189,8 @@ export const fetchUserPurchases = createAsyncThunk(
 );
 
 // Stats Thunks
-
-export const fetchUserStats = createAsyncThunk(
-  'stats/fetchStats',
+export const fetchUserStats = createAsyncThunk<UserStats, string>(
+  'user/fetchStats',
   async (userId: string, { rejectWithValue }) => {
     try {
       return await statsService.getUserStats(userId);

@@ -262,6 +262,7 @@ const vehiclesSlice = createSlice({
 });
 
 export const { 
+
   setFilters, 
   clearFilters, 
   resetVehiclesState,
@@ -270,3 +271,5 @@ export const {
 } = vehiclesSlice.actions;
 
 export default vehiclesSlice.reducer;
+
+export const vehicleReducer = vehiclesSlice.reducer;

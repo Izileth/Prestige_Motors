@@ -18,7 +18,7 @@ import Footer from "./src/components/layout/Footer/footer";
 import { useEffect } from 'react';
 import { useAuth } from "./src/hooks/useUser";
 
-
+import { BrowserRouter } from 'react-router-dom';
 import "./app.css";
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -68,12 +68,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   // Detecta ambiente
   const isServer = typeof window === 'undefined';
-
-  const { checkSession } = useAuth();
-  
-  useEffect(() => {
-    checkSession();
-  }, [checkSession]);
   
   // No servidor, renderiza sem Redux
   if (isServer) {
@@ -91,12 +85,27 @@ export default function App() {
   // No cliente, renderiza com Redux
   return (
     <Provider store={store}>
-      <main>
-        <SafeNavbar/>
-        <Outlet />
-        <Footer />
-      </main>
+      <AppMain />
     </Provider>
+  );
+}
+
+// Componente separado que usa hooks do Redux
+function AppMain() {
+  const { checkSession } = useAuth();
+  
+  useEffect(() => {
+    checkSession();
+  }, [checkSession]);
+
+  return (
+    <main>
+      <BrowserRouter>
+      <SafeNavbar/>
+      <Outlet />
+      <Footer />
+      </BrowserRouter>
+    </main>
   );
 }
 

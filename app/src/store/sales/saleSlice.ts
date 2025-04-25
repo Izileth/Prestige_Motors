@@ -13,6 +13,7 @@ import {
   fetchBuyerPurchases
 } from './saleThuncks';
 
+
 const salesSlice = createSlice({
   name: 'sales',
   initialState,
@@ -167,3 +168,5 @@ export const {
 } = salesSlice.actions;
 
 export default salesSlice.reducer;
+
+export const salesReducer = salesSlice.reducer;

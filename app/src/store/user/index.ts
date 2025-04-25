@@ -1,2 +1,3 @@
 export * from './types';
-export * from './userThunks';
+export * from './userSlice';
+export * from './userThunks'

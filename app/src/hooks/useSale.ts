@@ -66,21 +66,22 @@ export const useSales = () => {
   }, [dispatch]);
 
   // Vendas por veículo
+  
   const getVehicleSales = useCallback(async (vehicleId: string, params?: SalesQueryParams) => {
     try {
-      const result = await dispatch(fetchVehicleSales(vehicleId, params)).unwrap();
-      return result.data; // Retorna apenas os dados da paginação
+      const result = await dispatch(fetchVehicleSales({ vehicleId, params })).unwrap();
+      return result.data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar vendas do veículo';
       throw new Error(errorMessage);
     }
   }, [dispatch]);
-  
 
   // Vendas por vendedor
+
   const getSellerSales = useCallback(async (sellerId: string, params?: SalesQueryParams) => {
     try {
-      const result = await dispatch(fetchSellerSales(sellerId, params)).unwrap();
+      const result = await dispatch(fetchSellerSales({ sellerId, params })).unwrap();
       return result.data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar vendas do vendedor';
@@ -91,7 +92,7 @@ export const useSales = () => {
   // Compras por comprador
   const getBuyerPurchases = useCallback(async (buyerId: string, params?: SalesQueryParams) => {
     try {
-      const result = await dispatch(fetchBuyerPurchases(buyerId, params)).unwrap();
+      const result = await dispatch(fetchBuyerPurchases({ buyerId, params })).unwrap();
       return result.data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao buscar compras do comprador';

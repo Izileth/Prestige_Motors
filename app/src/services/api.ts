@@ -1,6 +1,6 @@
 import axios from "axios";
 import { store } from "../store/globalStore";
-import { logout } from "../store/user/userThunks";
+import { logout } from "../store/user";
 
 interface ApiError {
   message: string;

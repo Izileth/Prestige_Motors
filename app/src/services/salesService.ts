@@ -32,13 +32,19 @@ export const saleService = {
         return response.data;
     },
 
-    getSalesBySeller: async (userId: string): Promise<PaginatedResponse<Venda>> => {
-      const response = await api.get(`/sales/sellers/${userId}`);
+    getSalesBySeller: async (
+        userId: string,
+        params?: { page?: number; limit?: number }
+    ): Promise<PaginatedResponse<Venda>> => {
+      const response = await api.get(`/sales/sellers/${userId}`,{ params });
       return response.data;
     },
 
-    getPurchasesByBuyer: async (userId: string): Promise<PaginatedResponse<Venda>> => {
-      const response = await api.get(`/sales/buyers/${userId}`);
+    getPurchasesByBuyer: async (
+        userId: string,
+        params?: { page?: number; limit?: number }
+    ): Promise<PaginatedResponse<Venda>> => {
+      const response = await api.get(`/sales/buyers/${userId}`, {params});
       return response.data;
     } ,
 

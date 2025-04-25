@@ -23,7 +23,7 @@ import {
   clearSales,
   clearStats,
   initialUserState
-} from "../store/user/userSlice";
+} from "../store/user";
 
 import type {
   RegisterPayload,
@@ -44,14 +44,15 @@ export const useUser = () => {
   const isClient = typeof window !== "undefined";
 
   // Seletores de estado usando a estrutura do slice unificado
-  const userState = useAppSelector((state) => state.user);
-  
+  const userState = useAppSelector((state) => state.user) || initialUserState;
   // Extraindo subpartes do estado para uso mais fácil
-  const auth = userState.auth;
-  const profile = userState.profile;
-  const addresses = userState.addresses;
-  const sales = userState.sales;
-  const stats = userState.stats;
+
+
+  const auth = userState?.auth || initialUserState.auth;
+  const profile = userState?.profile || initialUserState.profile;
+  const addresses = userState?.addresses || initialUserState.addresses;
+  const sales = userState?.sales || initialUserState.sales;
+  const stats = userState?.stats || initialUserState.stats;
 
   const isAuthenticated = isClient && Boolean(auth.user);
 
@@ -213,10 +214,12 @@ export const useUser = () => {
   );
 
   // Métodos de vendas/compras
-  const getSales = useCallback(async () => {
+  const getSales = useCallback(async (
+    userId: string
+  ) => {
     try {
       ensureAuthenticated();
-      return await dispatch(fetchUserSales()).unwrap();
+      return await dispatch(fetchUserSales(userId)).unwrap();
     } catch (error) {
       throw error instanceof Error
         ? error

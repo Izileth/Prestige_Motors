@@ -1,6 +1,6 @@
 import type { Route } from "./+types/login";
 import LoginPage from "~/src/pages/Auth/loginPage";
-
+import { MemoryRouter } from 'react-router-dom';
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Login | Prestige Motors" },
@@ -9,5 +9,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Login() {
-  return <LoginPage/> ;
+  return (
+    <MemoryRouter>
+      <LoginPage/>
+    </MemoryRouter>
+  );
 }

@@ -1,35 +1,27 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { createAsyncThunk } from '@reduxjs/toolkit';
 
 import type { 
   UserState, 
-  User, 
-  Profile, 
-  RegisterPayload, 
-  LoginPayload, 
-  UpdateProfilePayload, 
-  CreateAddressPayload, 
-  UpdateAddressPayload,
   PaginatedData,
-  Venda,
-  UserStats
 } from './types';
-
+import { 
+    register,
+    login,
+    logout,
+    checkAuth,
+    fetchCurrentUser,
+    updateCurrentProfile,
+    deleteCurrentAccount,
+    fetchUserAddresses,
+    createUserAddress,
+    updateUserAddress,
+    deleteUserAddress,
+    fetchUserSales,
+    fetchUserPurchases,
+    fetchUserStats
+  } from '../user';
 import type { Endereco, PaginatedResponse } from '../../types/types';
-
-import {
-  authService,
-  profileService,
-  addressService,
-  statsService
-} from '../../services/userService';
-
-import { saleService } from '../../services/salesService';
-
-import type { RootState } from '../globalStore';
-;
-
 
 function convertToPaginatedData<T>(response: PaginatedResponse<T>): PaginatedData<T> {
   return {
@@ -41,10 +33,6 @@ function convertToPaginatedData<T>(response: PaginatedResponse<T>): PaginatedDat
     }
   };
 }
-
-
-
-
 
 // Estado inicial unificado com tipos apropriados
 export const initialUserState: UserState = {
@@ -88,188 +76,17 @@ export const initialUserState: UserState = {
     stats: null,
     status: 'idle',
     error: null
-  }
+  },
+
 };
-
-// Authentication Thunks
-export const register = createAsyncThunk<User, RegisterPayload>(
-  'user/register',
-  async (payload: RegisterPayload, { rejectWithValue }) => {
-    try {
-      return await authService.register(payload);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro no registro');
-    }
-  }
-);
-
-export const login = createAsyncThunk<User, LoginPayload>(
-  'user/login',
-  async (credentials: LoginPayload, { rejectWithValue }) => {
-    try {
-      return await authService.login(credentials);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        return rejectWithValue(error.message);
-      }
-      return rejectWithValue('Erro desconhecido no login');
-    }
-  }
-);
-
-export const logout = createAsyncThunk(
-  'user/logout',
-  async (_, { rejectWithValue }) => {
-    try {
-      await authService.logout();
-      return null;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao fazer logout');
-    }
-  }
-);
-
-export const checkAuth = createAsyncThunk<User>(
-  'user/checkSession',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await authService.checkSession();
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Sessão expirada');
-    }
-  }
-);
-
-// Profile Thunks
-export const fetchCurrentUser = createAsyncThunk<Profile>(
-  'user/fetchCurrentUser',
-  async (_, { rejectWithValue }) => {
-    try {
-      const userData = await profileService.getCurrentUser();
-      return userData;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao buscar usuário');
-    }
-  }
-);
-
-export const updateCurrentProfile = createAsyncThunk<Profile, UpdateProfilePayload>(
-  'user/updateProfile',
-  async (data: UpdateProfilePayload, { rejectWithValue }) => {
-    try {
-      return await profileService.updateProfile(data);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao atualizar perfil');
-    }
-  }
-);
-
-export const deleteCurrentAccount = createAsyncThunk(
-  'user/deleteAccount',
-  async (_, { rejectWithValue }) => {
-    try {
-      await profileService.deleteAccount();
-      return null;
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao deletar conta');
-    }
-  }
-);
-
-// Address Thunks
-export const fetchUserAddresses = createAsyncThunk<Endereco[]>(
-  'user/fetchAddresses',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await addressService.getMyAddresses();
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao buscar endereços');
-    }
-  }
-);
-
-export const createUserAddress = createAsyncThunk<Endereco, CreateAddressPayload>(
-  'user/createAddress',
-  async (addressData: CreateAddressPayload, { rejectWithValue }) => {
-    try {
-      return await addressService.createAddress(addressData);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao criar endereço');
-    }
-  }
-);
-
-export const updateUserAddress = createAsyncThunk<
-  Endereco, 
-  { addressId: string; addressData: UpdateAddressPayload }
->(
-  'user/updateAddress',
-  async ({ addressId, addressData }, { rejectWithValue }) => {
-    try {
-      return await addressService.updateAddress(addressId, addressData);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao atualizar endereço');
-    }
-  }
-);
-
-export const deleteUserAddress = createAsyncThunk<string, string>(
-  'user/deleteAddress',
-  async (addressId: string, { rejectWithValue, fulfillWithValue }) => {
-    try {
-      await addressService.deleteAddress(addressId);
-      return fulfillWithValue(addressId);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao deletar endereço');
-    }
-  }
-);
-
-// Sales Thunks
-// Se PaginatedResponse<Venda> é o que os serviços realmente retornam:
-export const fetchUserSales = createAsyncThunk<PaginatedResponse<Venda>>(
-  'user/fetchSales',
-  async (_, { getState, rejectWithValue }) => {
-    try {
-      const state = getState() as RootState;
-      const userId = state.user.auth.user?.id;
-      if (!userId) throw new Error('Usuário não autenticado');
-      
-      return await saleService.getSalesBySeller(userId);
-    } catch (error: unknown) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Erro ao buscar vendas');
-    }
-  }
-);
-
-export const fetchUserPurchases = createAsyncThunk<PaginatedResponse<Venda>, string>(
-  'user/fetchPurchases',
-  async (userId: string, { rejectWithValue }) => {
-    try {
-      return await saleService.getPurchasesByBuyer(userId);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao buscar compras');
-    }
-  }
-);
-
-// Stats Thunks
-export const fetchUserStats = createAsyncThunk<UserStats, string>(
-  'user/fetchStats',
-  async (userId: string, { rejectWithValue }) => {
-    try {
-      return await statsService.getUserStats(userId);
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Erro ao buscar estatísticas');
-    }
-  }
-);
 
 // Slice unificado
 const userSlice = createSlice({
   name: 'user',
   initialState: initialUserState,
   reducers: {
+    
+    
     // Auth reducers
     forceLogout: (state) => {
       state.auth.user = null;
@@ -342,6 +159,7 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+    
       // Register
       .addCase(register.pending, (state) => {
         state.auth.status = 'loading';
@@ -395,138 +213,113 @@ const userSlice = createSlice({
         state.auth.user = null;
         state.auth.status = 'idle';
       })
-      
-      // Profile
+        // Fetch Current User
       .addCase(fetchCurrentUser.pending, (state) => {
         state.profile.status = 'loading';
-        state.profile.error = null;
       })
       .addCase(fetchCurrentUser.fulfilled, (state, action) => {
-        state.profile.status = 'succeeded';
         state.profile.profile = action.payload;
+        state.profile.status = 'succeeded';
       })
       .addCase(fetchCurrentUser.rejected, (state, action) => {
         state.profile.status = 'failed';
         state.profile.error = action.payload as string;
       })
+
+      // Update Profile
       .addCase(updateCurrentProfile.pending, (state) => {
         state.profile.status = 'loading';
-        state.profile.error = null;
       })
       .addCase(updateCurrentProfile.fulfilled, (state, action) => {
+        state.profile.profile = action.payload;
         state.profile.status = 'succeeded';
-        if (state.profile.profile) {
-          state.profile.profile = { ...state.profile.profile, ...action.payload };
-        }
       })
       .addCase(updateCurrentProfile.rejected, (state, action) => {
         state.profile.status = 'failed';
         state.profile.error = action.payload as string;
       })
-      .addCase(deleteCurrentAccount.pending, (state) => {
-        state.profile.status = 'loading';
+
+      // Delete Account
+      .addCase(deleteCurrentAccount.fulfilled, (state) => {
+        state.auth.user = null;
+        state.profile.profile = null;
       })
-      
-      // Addresses
+
+      // Fetch Addresses
       .addCase(fetchUserAddresses.pending, (state) => {
         state.addresses.status = 'loading';
-        state.addresses.error = null;
       })
       .addCase(fetchUserAddresses.fulfilled, (state, action) => {
-        state.addresses.status = 'succeeded';
         state.addresses.addresses = action.payload;
+        state.addresses.status = 'succeeded';
       })
       .addCase(fetchUserAddresses.rejected, (state, action) => {
         state.addresses.status = 'failed';
         state.addresses.error = action.payload as string;
       })
-      .addCase(createUserAddress.pending, (state) => {
-        state.addresses.status = 'loading';
-        state.addresses.error = null;
-      })
+
+      // Create Address
       .addCase(createUserAddress.fulfilled, (state, action) => {
-        state.addresses.status = 'succeeded';
         state.addresses.addresses.push(action.payload);
       })
-      .addCase(createUserAddress.rejected, (state, action) => {
-        state.addresses.status = 'failed';
-        state.addresses.error = action.payload as string;
-      })
-      .addCase(updateUserAddress.pending, (state) => {
-        state.addresses.status = 'loading';
-        state.addresses.error = null;
-      })
+
+      // Update Address
       .addCase(updateUserAddress.fulfilled, (state, action) => {
-        state.addresses.status = 'succeeded';
-        state.addresses.addresses = state.addresses.addresses.map(addr => 
-          addr.id === action.payload.id ? action.payload : addr
+        const index = state.addresses.addresses.findIndex(
+          addr => addr.id === action.payload.id
         );
-        if (state.addresses.currentAddress?.id === action.payload.id) {
-          state.addresses.currentAddress = action.payload;
+        if (index !== -1) {
+          state.addresses.addresses[index] = action.payload;
         }
       })
-      .addCase(updateUserAddress.rejected, (state, action) => {
-        state.addresses.status = 'failed';
-        state.addresses.error = action.payload as string;
-      })
-      .addCase(deleteUserAddress.pending, (state) => {
-        state.addresses.status = 'loading';
-        state.addresses.error = null;
-      })
+
+      // Delete Address
       .addCase(deleteUserAddress.fulfilled, (state, action) => {
-        state.addresses.status = 'succeeded';
         state.addresses.addresses = state.addresses.addresses.filter(
           addr => addr.id !== action.payload
         );
-        if (state.addresses.currentAddress?.id === action.payload) {
-          state.addresses.currentAddress = null;
-        }
       })
-      .addCase(deleteUserAddress.rejected, (state, action) => {
-        state.addresses.status = 'failed';
-        state.addresses.error = action.payload as string;
-      })
-      
-      // Sales
+
+      // Fetch Sales
       .addCase(fetchUserSales.pending, (state) => {
         state.sales.status = 'loading';
-        state.sales.error = null;
       })
       .addCase(fetchUserSales.fulfilled, (state, action) => {
-        state.sales.status = 'succeeded';
         state.sales.sales = convertToPaginatedData(action.payload);
+        state.sales.status = 'succeeded';
       })
       .addCase(fetchUserSales.rejected, (state, action) => {
         state.sales.status = 'failed';
         state.sales.error = action.payload as string;
       })
+
+      // Fetch Purchases
       .addCase(fetchUserPurchases.pending, (state) => {
         state.sales.status = 'loading';
-        state.sales.error = null;
       })
       .addCase(fetchUserPurchases.fulfilled, (state, action) => {
-        state.sales.status = 'succeeded';
         state.sales.purchases = convertToPaginatedData(action.payload);
+        state.sales.status = 'succeeded';
       })
       .addCase(fetchUserPurchases.rejected, (state, action) => {
         state.sales.status = 'failed';
         state.sales.error = action.payload as string;
       })
-      
-      // Stats
+
+      // Fetch Stats
       .addCase(fetchUserStats.pending, (state) => {
         state.stats.status = 'loading';
-        state.stats.error = null;
       })
       .addCase(fetchUserStats.fulfilled, (state, action) => {
-        state.stats.status = 'succeeded';
         state.stats.stats = action.payload;
+        state.stats.status = 'succeeded';
       })
       .addCase(fetchUserStats.rejected, (state, action) => {
         state.stats.status = 'failed';
         state.stats.error = action.payload as string;
       });
-  },
+
+    },
 });
 
 // Export actions

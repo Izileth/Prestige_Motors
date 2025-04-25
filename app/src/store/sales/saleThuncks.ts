@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 import type { SaleCreatePayload, SaleStatus } from '~/src/services/salesService';
-import type { FetchSellerSalesPayload } from './types';
+import type { FetchSellerSalesPayload, FetchBuyerPurchasesPayload } from './types';
 
 
 // Tipos adicionais para as novas funções
@@ -21,6 +21,8 @@ type SalesParams = {
   buyerId?: string;
   vehicleId?: string;
 };
+
+
 
 export const createNewSale = createAsyncThunk(
   'sales/create',
@@ -83,12 +85,13 @@ export const fetchAllSales = createAsyncThunk(
 );
 
 
+
 export const fetchSellerSales = createAsyncThunk(
   'sales/fetchBySeller',
-  async  (userId: string,  { rejectWithValue }) => {
+  async ({ sellerId, params }: FetchSellerSalesPayload, { rejectWithValue }) => {
     try {
-      const data = await  saleService.getSalesBySeller(userId);
-      return { userId, data }; // Retorna tanto o userId quanto os dados
+      const data = await saleService.getSalesBySeller(sellerId, params);
+      return { userId: sellerId, data }; // Mantido userId para compatibilidade
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Erro ao buscar vendas do vendedor');
     }
@@ -98,9 +101,9 @@ export const fetchSellerSales = createAsyncThunk(
 
 export const fetchBuyerPurchases = createAsyncThunk(
   'sales/fetchByBuyer',
-  async (buyerId: string, { rejectWithValue }) => {
+  async ({ buyerId, params }: FetchBuyerPurchasesPayload, { rejectWithValue }) => {
     try {
-      return await saleService.getPurchasesByBuyer(buyerId);
+      return await saleService.getPurchasesByBuyer(buyerId, params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Erro ao buscar compras do comprador');
     }

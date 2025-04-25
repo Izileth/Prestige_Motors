@@ -1,6 +1,6 @@
 import type { Route } from "./+types/register";
 import RegisterPage from "~/src/pages/Auth/registerPage";
-
+import { MemoryRouter } from "react-router-dom";
 export function meta({}: Route.MetaArgs) {
   return [
     { title: "Registro | Prestige Motors" },
@@ -9,5 +9,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Register() {
-  return <RegisterPage/> ;
+  return (
+    <MemoryRouter>
+      <RegisterPage/> 
+    </MemoryRouter>
+  );
 }

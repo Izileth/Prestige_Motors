@@ -32,23 +32,24 @@ export type UpdateSaleStatusPayload = {
   status: SaleStatus; // Usando o tipo do serviço
 };
 
+
 export type SalesQueryParams = {
   page?: number;
   limit?: number;
-  sellerId: string;
-  buyerId: string;
-  vehicleId: string;
+  sellerId?: string;
+  buyerId?: string;
+  vehicleId?: string;
 };
 
 // Novos Adicionais
 
 export type FetchSellerSalesPayload = {
-  userId: string;
+  sellerId: string; // Mudado de userId para sellerId
   params?: SalesQueryParams;
 };
 
 export type FetchBuyerPurchasesPayload = {
-  userId: string;
+  buyerId: string; // Mudado de userId para buyerId
   params?: SalesQueryParams;
 };
 

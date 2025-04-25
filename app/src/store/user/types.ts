@@ -1,5 +1,4 @@
 import type { Endereco} from '../../types/types';
-
 // Payloads para ações
 export interface RegisterPayload {
   nome: string;
@@ -113,6 +112,13 @@ export interface StatsState {
   error: string | null;
 }
 
+export interface StatsProcess {
+  pending: boolean,
+  fulfilled: boolean,
+  rejected: boolean,
+  error: string | null;
+}
+
 // Estado unificado para o slice
 export interface UserState {
   auth: AuthState;
@@ -120,4 +126,5 @@ export interface UserState {
   addresses: AddressesState;
   sales: SalesState;
   stats: StatsState;
+
 }
